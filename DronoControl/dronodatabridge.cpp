@@ -259,6 +259,9 @@ void DronoHttpDataBridge::endWrite()
         s_url += QString("?%1?%2").arg(item.first).arg(item.second);
     }
 
+    //XXX: just for UI debug network disabled
+    return;
+
     QNetworkRequest req;
     req.setUrl(QUrl(s_url));
     req.setHeader(QNetworkRequest::ContentTypeHeader,QStringLiteral("text/plain; charset=utf-8"));

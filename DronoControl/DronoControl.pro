@@ -1,9 +1,10 @@
 TEMPLATE = app
 
-QT += qml quick serialport
+QT += qml quick
 
-DEFINES += "DRONOSERIAL"
-QMAKE_CXXFLAGS += -DDRONOSERIAL
+#DEFINES += "DRONOSERIAL"
+#QMAKE_CXXFLAGS += -DDRONOSERIAL
+#QT += serialport
 
 CONFIG += c++11
 

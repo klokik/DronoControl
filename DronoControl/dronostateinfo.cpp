@@ -51,7 +51,7 @@ QJsonObject DronoStateInfo::toJson()
 
     json["connection"] = conn;
 
-    json["greeting"] = "Ou, yeah!";
+    json["greeting"] = QString("Ou, yeah!");
 
     qDebug()<<QString(QJsonDocument(json).toJson());
 
