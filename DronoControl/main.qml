@@ -281,6 +281,8 @@ Window {
 //           case Qt.Key_J: rightStick.shift.y -= 1; break;
 //           case Qt.Key_K: rightStick.shift.y += 1; break;
            case Qt.Key_L: rightStick.shift.x -= .1; break;
+
+           case Qt.Key_Back: Qt.quit(); break;
            }
 
            event.accepted = true;
