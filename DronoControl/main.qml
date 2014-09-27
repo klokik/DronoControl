@@ -7,7 +7,7 @@ Window {
     visible: true
     minimumWidth: 854
     minimumHeight: 480
-    flags: Qt.Dialog
+//    flags: Qt.Dialog
 
     color: "#cdcdcd"
 
