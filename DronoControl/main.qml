@@ -110,8 +110,8 @@ Window {
         AUXButton {
             id: aux_1
             aux_id: 1
-            text: "Arm" //"AUX" + aux_id
-            objectName: text
+            text: "Arm"
+            objectName: "AUX" + aux_id
 
             Layout.minimumWidth: 110
             Layout.minimumHeight: 48
@@ -122,8 +122,8 @@ Window {
         AUXButton {
             id: aux_2
             aux_id: 2
-            text: "AltLock"//"AUX" + aux_id
-            objectName: text
+            text: "AltLock"
+            objectName: "AUX" + aux_id
 
             anchors.right: parent.right
 
@@ -166,8 +166,8 @@ Window {
         AUXButton {
             id: aux_3
             aux_id: 3
-            text: "CareFree"//"AUX" + aux_id
-            objectName: text
+            text: "CareFree"
+            objectName: "AUX" + aux_id
 
             Layout.minimumWidth: 110
             Layout.minimumHeight: 48
@@ -178,8 +178,8 @@ Window {
         AUXButton {
             id: aux_4
             aux_id: 4
-            text: "GoHome"//"AUX" + aux_id
-            objectName: text
+            text: "GoHome"
+            objectName: "AUX" + aux_id
 
             anchors.right: parent.right
 
@@ -209,9 +209,9 @@ Window {
     }
 
     RowLayout {
-        id: controlPanel
-        width: parent.width
-        height: 336
+       id: controlPanel
+       width: parent.width
+       height: 336
        Layout.minimumHeight: 240
        Layout.preferredHeight: 240
 
