@@ -20,13 +20,16 @@ public slots:
         qDebug()<<slist[tid]<<" trigger changed ( "<<x<<" : "<<y<<" )";
 
 //        return;
-        dbridge->startWrite();
+//        dbridge->startWrite();
 
-        dbridge->writeUInt16(REG_RC_VAL0+2*2*tid  ,(x+1)*0.5f*1000);
-        dbridge->writeUInt16(REG_RC_VAL0+2*2*tid+2,(y+1)*0.5f*1000);
+//        dbridge->writeUInt16(REG_RC_VAL0+2*2*tid  ,(x+1)*0.5f*1000);
+//        dbridge->writeUInt16(REG_RC_VAL0+2*2*tid+2,(y+1)*0.5f*1000);
 
-        dbridge->endWrite();
-        dbridge->waitReady();
+//        dbridge->endWrite();
+//        dbridge->waitReady();
+
+        dbridge->enqueueTimerWriteUint16(REG_RC_VAL0+2*2*tid  ,(x+1)*0.5f*1000);
+        dbridge->enqueueTimerWriteUint16(REG_RC_VAL0+2*2*tid+2,(y+1)*0.5f*1000);
     }
 
     void auxChanged(int id,QString state)
@@ -61,7 +64,8 @@ public:
     VJoystickIOHandler(void)
     {
         #if defined(DRONOSERIAL)
-            dbridge = std::dynamic_pointer_cast<DronoDataBridge>(std::make_shared<DronoSerialDataBridge>());
+//            dbridge = std::dynamic_pointer_cast<DronoDataBridge>(std::make_shared<DronoSerialDataBridge>());
+            dbridge = std::dynamic_pointer_cast<DronoDataBridge>(std::make_shared<DronoRfcommDataBridge>());
         #else
             dbridge = std::dynamic_pointer_cast<DronoDataBridge>(std::make_shared<DronoHttpDataBridge>());
         #endif
