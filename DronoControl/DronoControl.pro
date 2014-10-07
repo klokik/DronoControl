@@ -1,10 +1,10 @@
 TEMPLATE = app
 
-QT += qml quick
+QT += qml quick bluetooth
 
 #DEFINES += "DRONOSERIAL"
 #QMAKE_CXXFLAGS += -DDRONOSERIAL
-#QT += serialport
+QT += serialport
 
 CONFIG += c++11
 
