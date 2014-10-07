@@ -5,6 +5,21 @@
 
 #include <utility>
 
+void DronoDataBridge::flushTimerQueue()
+{
+    if(send_timer_queue.empty())
+        return;
+
+    startWrite();
+
+    for(auto &item:send_timer_queue)
+        writeByte(item.first,item.second);
+
+    send_timer_queue.clear();
+
+    endWrite();
+}
+
 bool DronoDataBridge::readBool(int reg)
 {
     return (readByte(reg) != 0);
@@ -67,6 +82,22 @@ uint16_t DronoDataBridge::getLastPing()
     return 3;
 }
 
+void DronoDataBridge::enqueueTimerWriteUint16(int reg, uint16_t val)
+{
+    send_timer_queue[reg  ] = val/256;
+    send_timer_queue[reg+1] = val%256;
+}
+
+void DronoDataBridge::enqueueTimerWriteByte(int reg, uint8_t val)
+{
+    send_timer_queue[reg] = val;
+}
+
+DronoDataBridge::DronoDataBridge()
+{
+    connect(&send_timer,SIGNAL(timeout()),this,SLOT(flushTimerQueue()));
+}
+
 #if defined(DRONOSERIAL)
 
 #include <QtSerialPort/QSerialPortInfo>
@@ -74,7 +105,7 @@ uint16_t DronoDataBridge::getLastPing()
 DronoSerialDataBridge::DronoSerialDataBridge()
 {
     connect(&serial,SIGNAL(error(QSerialPort::SerialPortError)),this,SLOT(serial_error(QSerialPort::SerialPortError)));
-    try_connect();
+    tryConnect();
 }
 
 uint8_t DronoSerialDataBridge::readByte(int reg)
@@ -129,13 +160,13 @@ bool DronoSerialDataBridge::waitReady()
     return true;
 }
 
-void DronoSerialDataBridge::try_connect()
+void DronoSerialDataBridge::tryConnect()
 {
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
     {
-//        qDebug() << "Name        : " << info.portName();
-//        qDebug() << "Description : " << info.description();
-//        qDebug() << "Manufacturer: " << info.manufacturer();
+        qDebug() << "Name        : " << info.portName();
+        qDebug() << "Description : " << info.description();
+        qDebug() << "Manufacturer: " << info.manufacturer();
 
         if(info.manufacturer() == "FTDI")
         {
@@ -152,7 +183,7 @@ void DronoSerialDataBridge::try_connect()
     }
 
     qDebug()<< "No acceptable serial device found";
-    QTimer::singleShot(1000,this,SLOT(try_connect()));
+    QTimer::singleShot(1000,this,SLOT(tryConnect()));
     //return false;
 }
 
@@ -291,4 +322,160 @@ DronoHttpDataBridge::DronoHttpDataBridge()
 //    QObject::connect(&n_access_manager,SIGNAL(finished(QNetworkReply*)),&n_event_loop,SLOT(quit()));
     QObject::connect(&alive,SIGNAL(timeout()),this,SLOT(ping()));
     alive.start(1000);
+}
+
+
+void DronoRfcommDataBridge::tryConnect()
+{
+    if(!connecting.tryLock())
+        return; // connection routine has been already started
+
+    qDebug()<<"Trying to connect single client \"Angel\"";
+
+    //! [Connecting the socket]
+    // memory leak!?
+    socket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol);
+    socket->connectToService(QBluetoothAddress(baddress),QBluetoothUuid(QBluetoothUuid::SerialPort));
+
+    connect(socket, SIGNAL(readyRead()), this, SLOT(readSocket()));
+    connect(socket, SIGNAL(connected()), this, SLOT(serverConnected()));
+    connect(socket, SIGNAL(disconnected()), this, SLOT(serverDisconnected()));
+
+
+//    QWaitCondition waiter;
+//    waiter.wait(&connecting);
+
+    qDebug()<<"Connection routine finished";
+}
+
+void DronoRfcommDataBridge::serverConnected()
+{
+    qDebug()<<"Server connected\twriting some data..";
+
+//    QByteArray data;
+
+//    data.append("Hello, world!\n");
+//    data.append("Hello, world!\n");
+//    socket->write(data.constData());
+
+    qDebug()<<"\tdone";
+
+    connected = true;
+    connecting.unlock();
+    etimer.start();
+    send_timer.start(50);
+}
+
+void DronoRfcommDataBridge::serverDisconnected()
+{
+    qDebug()<<"Server disconnected";
+    connected = false;
+}
+
+void DronoRfcommDataBridge::socketError(QBluetoothSocket::SocketError error)
+{
+    qDebug()<<"Socket error "<<error;
+    connecting.unlock();
+}
+
+void DronoRfcommDataBridge::readSocket()
+{
+//    qDebug()<<"data received";
+
+//    if (!socket)
+//        return;
+
+//    QByteArray line;
+//    while (socket->canReadLine())
+//    {
+//        line = socket->readLine();
+//        qDebug() << "Line: " << QString::fromUtf8(line.constData(), line.length());
+//    }
+}
+
+uint8_t DronoRfcommDataBridge::readByte(int reg)
+{
+    if(!connected)
+        return 0;
+
+    uint8_t buf[] = {1,(uint8_t)reg,0,0};
+    QString hexstr = "";
+    for(uint q=0;q<sizeof(buf);q++)
+        hexstr += QString::number(buf[q],16).rightJustified(2,'0');
+    hexstr.append('\n');
+
+    QByteArray ba_str = hexstr.toLocal8Bit();
+    socket->write(ba_str.constData());
+    socket->waitForBytesWritten(100);
+
+    socket->waitForReadyRead(100);
+    ba_str = socket->readLine(16);
+
+    uint8_t val = ba_str[5]*16u+ba_str[6];
+
+    return val;
+}
+
+void DronoRfcommDataBridge::endWrite()
+{
+    qDebug()<<"Writing data to BT";
+    if(!connected)
+    {
+        qDebug()<<"BT device not connected";
+        return;
+    }
+
+    // seems like a bug in socket->bytesToWrite() on android platform. Hmm, timeout?
+    qDebug()<<"BTW "<<socket->bytesToWrite();
+//    if(socket->bytesToWrite()>512)
+////    if(etimer.elapsed()<100)
+//    {
+//        qDebug()<<"W: dropping packet";
+//        return;
+//    }
+
+    etimer.restart();
+
+    while(!write_queue.empty())
+    {
+        auto item=write_queue.front();
+        write_queue.pop();
+
+        uint8_t buf[] = {0,(uint8_t)item.first,item.second,0};
+        QString hexstr = "";
+        for(uint q=0;q<sizeof(buf);q++)
+            hexstr += QString::number(buf[q],16).rightJustified(2,'0');
+        hexstr.append('\n');
+
+        QByteArray ba_str = hexstr.toLocal8Bit();
+//        qDebug()<<"Sending write request...";
+        socket->write(ba_str.constData());
+//        socket->waitForBytesWritten(100);
+
+//        qDebug()<<"waiting for response...";
+//        socket->waitForReadyRead(300);
+//        ba_str = socket->readLine(16);
+//        qDebug()<<QString(ba_str);
+    }
+//    socket->waitForBytesWritten(100);
+//    qDebug()<<"Write finished";
+}
+
+bool DronoRfcommDataBridge::waitReady()
+{
+    return true;
+}
+
+DronoRfcommDataBridge::DronoRfcommDataBridge()
+{
+    tryConnect();
+}
+
+DronoRfcommDataBridge::~DronoRfcommDataBridge()
+{
+    if(socket)
+    {
+        socket->close();
+        delete socket;
+    }
 }

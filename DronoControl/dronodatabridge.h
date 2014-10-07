@@ -6,6 +6,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QUrl>
+#include <QtBluetooth/QBluetoothSocket>
 
 #include <cstdint>
 #include <queue>
@@ -18,6 +19,12 @@ protected:
     uint16_t ping;
 
     std::queue< std::pair<uint8_t,uint8_t> > write_queue;
+    std::map<uint8_t,uint8_t> send_timer_queue;
+
+    QTimer send_timer;
+
+protected slots:
+    virtual void flushTimerQueue();
 
 public:
     bool readBool(int reg);
@@ -37,9 +44,14 @@ public:
     virtual bool waitReady() = 0;
 
     uint16_t getLastPing();
+
+    void enqueueTimerWriteByte(int reg,uint8_t val);
+    void enqueueTimerWriteUint16(int reg,uint16_t val);
+
+    DronoDataBridge();
 };
 
-
+#define DRONOSERIAL
 #if defined(DRONOSERIAL)
 
 #include <QtSerialPort/QSerialPort>
@@ -52,7 +64,7 @@ protected:
     QSerialPort serial;
 
 protected slots:
-    void try_connect();
+    void tryConnect();
     void serial_error(QSerialPort::SerialPortError err);
 
 public:
@@ -93,6 +105,41 @@ public:
     virtual bool waitReady();
 
     DronoHttpDataBridge();
+};
+
+class DronoRfcommDataBridge: public DronoDataBridge
+{
+    Q_OBJECT
+
+protected:
+    QBluetoothSocket *socket;
+    QMutex data_writing;
+    QMutex connecting;
+
+    bool connected = false;
+
+    QString baddress = "00:11:10:17:05:52";
+
+    QElapsedTimer etimer;
+
+
+protected slots:
+    void tryConnect();
+
+    void serverConnected();
+    void serverDisconnected();
+    void socketError(QBluetoothSocket::SocketError error);
+    void readSocket();
+
+public:
+    virtual uint8_t readByte(int reg) override;
+//    virtual void writeByte(int reg,uint8_t val) override;
+
+    virtual void endWrite() override;
+    virtual bool waitReady();
+
+    DronoRfcommDataBridge();
+    ~DronoRfcommDataBridge();
 };
 
 // 4
