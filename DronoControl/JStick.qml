@@ -46,20 +46,19 @@ Item {
             }
         }
 
-        MouseArea
-        {
-            anchors.fill: parent
-
-            onPositionChanged: {
-                root.shift.x = (mouse.x/width*2-1)
-                root.shift.y = (mouse.y/height*(-2)+1)
-            }
+        MultiPointTouchArea {
+            anchors.fill:  parent
 
             onReleased: {
                 if(!axisFreeX)
                     root.shift.x = 0
                 if(!axisFreeY)
                     root.shift.y = 0
+            }
+
+            onUpdated: {
+                root.shift.x = (touchPoints[0].x/width*2-1)
+                root.shift.y = (touchPoints[0].y/height*(-2)+1)
             }
         }
     }
