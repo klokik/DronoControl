@@ -8,6 +8,10 @@ QT += serialport
 
 CONFIG += c++11
 
+LIBS += -lSDL2
+
+INCLUDEPATH += /usr/include
+
 SOURCES += main.cpp \
     dronostateinfo.cpp \
     dronodatabridge.cpp \

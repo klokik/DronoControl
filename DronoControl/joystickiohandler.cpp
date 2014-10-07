@@ -1,68 +1,82 @@
-//#include "joystickiohandler.h"
+#include "joystickiohandler.h"
 
-//JoystickIOHandler::JoystickIOHandler()
-//{
-//    SDL_Init(SDL_INIT_GAMECONTROLLER);
-//}
 
-//void JoystickIOHandler::addController(int id)
-//{
-//    if(SDL_IsGameController(id))
-//    {
-//        SDL_GameController *pad = SDL_GameControllerOpen(id);
+void JoystickIOHandler::onControllerAdd(const SDL_ControllerDeviceEvent sdlEvent)
+{
+    auto id = sdlEvent.which;
 
-//        if(pad)
-//        {
-//            SDL_Joystick *joy = SDL_GameControllerGetJoystick(pad);
-//            int instanceID = SDL_JoystickInstanceID(joy);
+    if(SDL_IsGameController(id))
+    {
+        pad = SDL_GameControllerOpen(id);
 
-//            // You can add to your own map of joystick IDs to controllers here.
-//            YOUR_FUNCTION_THAT_CREATES_A_MAPPING(id,pad);
-//        }
-//    }
-//}
+        if(pad)
+        {
+            SDL_Joystick *joy = SDL_GameControllerGetJoystick(pad);
+            int instanceID = SDL_JoystickInstanceID(joy);
 
-//void JoystickIOHandler::removeController(int id)
-//{
-//    SDL_GameController *pad = YOUR_FUNCTION_THAT_RETRIEVES_A_MAPPING(id);
-//    SDL_GameControllerClose(pad);
-//}
+            qDebug()<<"Joystick added: id"<<instanceID<<" "<<SDL_GameControllerName(pad);
+        }
+    }
+}
 
-//void JoystickIOHandler::onControllerButton(const SDL_ControllerButtonEvent sdlEvent)
-//{
-//    // Button presses and axis movements both sent here as SDL_ControllerButtonEvent structures
-//}
+void JoystickIOHandler::onControllerRemove(const SDL_ControllerDeviceEvent sdlEvent)
+{
+    SDL_GameControllerClose(pad);
+    qDebug()<<"Gamepad disconnected";
+}
 
-//void JoystickIOHandler::onControllerAxis(const SDL_ControllerAxisEvent sdlEvent)
-//{
-//    // Axis movements and button presses both sent here as SDL_ControllerAxisEvent structures
-//}
+void JoystickIOHandler::onAxisChange(const SDL_ControllerAxisEvent sdlEvent)
+{
+    qDebug()<<"Axis "<<(int)sdlEvent.axis<<" changed: "<<sdlEvent.value;
+}
 
-//void JoystickIOHandler::eventLoop()
-//{
-//    SDL_Event sdlEvent;
+void JoystickIOHandler::onButtonChange(const SDL_ControllerButtonEvent sdlEvent)
+{
+    qDebug()<<"Button "<<(int)sdlEvent.button<<" changed: "<<(int)sdlEvent.state;
+}
 
-//    while(SDL_PollEvent(&sdlEvent))
-//    {
-//        switch( sdlEvent.type )
-//        {
-//        case SDL_CONTROLLERDEVICEADDED:
-//            addController(sdlEvent.cdevice);
-//            break;
+void JoystickIOHandler::run()
+{
+    SDL_Event event;
 
-//        case SDL_CONTROLLERDEVICEREMOVED:
-//            removeController(sdlEvent.cdevice);
-//            break;
+    qDebug()<<"Waiting for gamepad input events";
+    while(!done&&SDL_WaitEvent(&event))
+    {
+        switch(event.type)
+        {
+        case SDL_CONTROLLERDEVICEADDED:
+            onControllerAdd(event.cdevice);
+            break;
+        case SDL_CONTROLLERDEVICEREMOVED:
+            onControllerRemove(event.cdevice);
+            break;
+        case SDL_CONTROLLERBUTTONDOWN:
+        case SDL_CONTROLLERBUTTONUP:
+            onButtonChange(event.cbutton);
+            break;
+        case SDL_CONTROLLERAXISMOTION:
+            onAxisChange(event.caxis);
+            break;
+        }
+    }
+}
 
-//        case SDL_CONTROLLERBUTTONDOWN:
-//        case SDL_CONTROLLERBUTTONUP:
-//            onControllerButton(sdlEvent.cbutton);
-//            break;
+JoystickIOHandler::JoystickIOHandler()
+{
+    done = false;
 
-//        case SDL_CONTROLLERAXISMOTION:
-//            onControllerAxis(sdlEvent.caxis);
-//            break;
-//        // YOUR OTHER EVENT HANDLING HERE
-//        }
-//    }
-//}
+    SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER);
+
+    this->start();
+}
+
+JoystickIOHandler::~JoystickIOHandler()
+{
+    done = true;
+    this->wait();
+
+    if(SDL_WasInit(SDL_INIT_GAMECONTROLLER))
+        SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
+
+    SDL_Quit();
+}
