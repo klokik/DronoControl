@@ -164,9 +164,9 @@ void DronoSerialDataBridge::tryConnect()
 {
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
     {
-        qDebug() << "Name        : " << info.portName();
-        qDebug() << "Description : " << info.description();
-        qDebug() << "Manufacturer: " << info.manufacturer();
+//        qDebug() << "Name        : " << info.portName();
+//        qDebug() << "Description : " << info.description();
+//        qDebug() << "Manufacturer: " << info.manufacturer();
 
         if(info.manufacturer() == "FTDI")
         {
