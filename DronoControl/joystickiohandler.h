@@ -11,7 +11,9 @@ class JoystickIOHandler: public QThread
 
 protected:
     SDL_GameController *pad;
-    bool done;
+
+    int16_t axis_val[10] = {0};
+    int16_t throttle = -32768;
 
     void onControllerAdd(const SDL_ControllerDeviceEvent sdlEvent);
     void onControllerRemove(const SDL_ControllerDeviceEvent sdlEvent);
@@ -20,6 +22,10 @@ protected:
 
     // sdl Event Loop
     void run();
+
+signals:
+    void AxisChange(QVariant id,QVariant x,QVariant y);
+    void ButtonChange(QVariant id,QVariant state);
 
 public:
     JoystickIOHandler();

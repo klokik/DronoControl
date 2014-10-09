@@ -24,6 +24,20 @@ Window {
         rcGPS.activated = jso.gps.fix;
     }
 
+    function qmlExtTriggerChanged(tid,x,y)
+    {
+        if(tid === 0)
+            leftStick.shift = Qt.vector2d(x,y);
+        else
+            rightStick.shift = Qt.vector2d(x,y);
+    }
+
+    function qmlExtAuxChanged(id,state)
+    {
+        if(state == "low")
+            eval('aux_'+(id+1)).click();
+    }
+
     RowLayout {
         id: activeFeatures
 

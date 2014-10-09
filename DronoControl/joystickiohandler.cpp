@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "joystickiohandler.h"
 
 
@@ -22,21 +24,58 @@ void JoystickIOHandler::onControllerAdd(const SDL_ControllerDeviceEvent sdlEvent
 void JoystickIOHandler::onControllerRemove(const SDL_ControllerDeviceEvent sdlEvent)
 {
     SDL_GameControllerClose(pad);
-    qDebug()<<"Gamepad disconnected";
+    qDebug()<<"Gamepad id"<<sdlEvent.which<<" disconnected";
 }
 
 void JoystickIOHandler::onAxisChange(const SDL_ControllerAxisEvent sdlEvent)
 {
-    qDebug()<<"Axis "<<(int)sdlEvent.axis<<" changed: "<<sdlEvent.value;
+//    qDebug()<<"Axis "<<(int)sdlEvent.axis<<" changed: "<<sdlEvent.value;
+
+    int16_t old_3 = axis_val[3];
+
+    axis_val[(size_t)sdlEvent.axis] = sdlEvent.value;
+
+    float x;
+    float y;
+    int id;
+
+    switch(sdlEvent.axis)
+    {
+    case 0:
+    case 1:
+        x = axis_val[0];
+        y = -axis_val[1];
+        id = 0;
+        break;
+    case 2:
+    case 3:
+        x = axis_val[5] - axis_val[4];
+        if((axis_val[3]-old_3) * axis_val[3] > 0) // going forward
+            throttle = std::min(std::max(throttle - (axis_val[3]-old_3)*2,-32768),32767);
+        y = throttle;
+        id = 1;
+        break;
+    case 4:
+    case 5:
+        x = axis_val[5] - axis_val[4];
+        y = throttle;
+        id = 1;
+        break;
+    }
+
+    emit AxisChange(id,x/32768.0f,y/32768.0f);
 }
 
 void JoystickIOHandler::onButtonChange(const SDL_ControllerButtonEvent sdlEvent)
 {
-    qDebug()<<"Button "<<(int)sdlEvent.button<<" changed: "<<(int)sdlEvent.state;
+//    qDebug()<<"Button "<<(int)sdlEvent.button<<" changed: "<<(int)sdlEvent.state;
+
+    emit ButtonChange((int)sdlEvent.button,sdlEvent.state?"high":"low");
 }
 
 void JoystickIOHandler::run()
 {
+    bool done = false;
     SDL_Event event;
 
     qDebug()<<"Waiting for gamepad input events";
@@ -57,14 +96,16 @@ void JoystickIOHandler::run()
         case SDL_CONTROLLERAXISMOTION:
             onAxisChange(event.caxis);
             break;
+
+        case SDL_QUIT:
+            done = true;
+            break;
         }
     }
 }
 
 JoystickIOHandler::JoystickIOHandler()
 {
-    done = false;
-
     SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER);
 
     this->start();
@@ -72,7 +113,9 @@ JoystickIOHandler::JoystickIOHandler()
 
 JoystickIOHandler::~JoystickIOHandler()
 {
-    done = true;
+    SDL_Event quit_event;
+    quit_event.type = SDL_QUIT;
+    SDL_PushEvent(&quit_event);
     this->wait();
 
     if(SDL_WasInit(SDL_INIT_GAMECONTROLLER))

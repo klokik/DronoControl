@@ -7,6 +7,7 @@
 //#include <QtSerialPort/QSerialPortInfo>
 
 #include "VJoystickIOHandler.h"
+#include "joystickiohandler.h"
 
 int main(int argc, char *argv[])
 {
@@ -16,6 +17,7 @@ int main(int argc, char *argv[])
     engine.load(QUrl(QStringLiteral("qrc:///main.qml")));
 
     VJoystickIOHandler vjoy_handler;
+    JoystickIOHandler joystick;
 
     QObject *root;
     if((root = engine.rootObjects().first()))
@@ -38,7 +40,11 @@ int main(int argc, char *argv[])
         QObject::connect(&vjoy_handler,SIGNAL(qmlUpdateInfo(QVariant)),root,SLOT(qmlUpdateInfo(QVariant)));
         QObject::connect(&vjoy_handler.update_info_timer,SIGNAL(timeout()),&vjoy_handler,SLOT(fetchInfo()));
 
+        QObject::connect(&joystick,SIGNAL(AxisChange(QVariant,QVariant,QVariant)),root,SLOT(qmlExtTriggerChanged(QVariant,QVariant,QVariant)));
+        QObject::connect(&joystick,SIGNAL(ButtonChange(QVariant,QVariant)),root,SLOT(qmlExtAuxChanged(QVariant,QVariant)));
+
         vjoy_handler.update_info_timer.start(1000);
     }
+
     return app.exec();
 }
