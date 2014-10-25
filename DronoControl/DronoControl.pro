@@ -26,8 +26,6 @@ QML_IMPORT_PATH =
 include(deployment.pri)
 
 HEADERS += \
-    TriggerHandler.h \
-    AUXHandler.h \
     VJoystickIOHandler.h \
     dronostateinfo.h \
     dronodatabridge.h \
