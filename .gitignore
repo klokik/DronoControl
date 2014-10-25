@@ -1,3 +1,7 @@
 build-*
 DronoControl/DronoControl.pro.user*
 
+#binaries and other files created while qmake/make procedure
+DronoControl/*.o
+DronoControl/Makefile
+DronoControl/DronoControl 
