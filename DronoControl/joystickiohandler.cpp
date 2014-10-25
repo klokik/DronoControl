@@ -2,6 +2,8 @@
 
 #include "joystickiohandler.h"
 
+#include <QtCore>
+
 
 void JoystickIOHandler::onControllerAdd(const SDL_ControllerDeviceEvent sdlEvent)
 {
@@ -70,6 +72,11 @@ void JoystickIOHandler::onButtonChange(const SDL_ControllerButtonEvent sdlEvent)
 {
 //    qDebug()<<"Button "<<(int)sdlEvent.button<<" changed: "<<(int)sdlEvent.state;
 
+    if((int)sdlEvent.button == 5)
+    {
+        qDebug()<<"Exit";
+        quick_exit(0);
+    }
     emit ButtonChange((int)sdlEvent.button,sdlEvent.state?"high":"low");
 }
 

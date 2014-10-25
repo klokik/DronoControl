@@ -251,6 +251,8 @@ Window {
 
            switch(event.key)
            {
+           case Qt.Key_Q: Qt.quit(); break;
+
            case Qt.Key_A: leftStick.shift.x -= .1; break;
            case Qt.Key_S: leftStick.shift.y -= .1; break;
            case Qt.Key_W: leftStick.shift.y += .1; break;
