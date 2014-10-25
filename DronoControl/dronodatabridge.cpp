@@ -175,6 +175,7 @@ void DronoSerialDataBridge::tryConnect()
             if(serial.open(QIODevice::ReadWrite))
             {
                 qDebug()<<"Opened port "<<info.portName();
+                send_timer.start(50);
                 return;
             }
             else
@@ -192,6 +193,7 @@ void DronoSerialDataBridge::serial_error(QSerialPort::SerialPortError err)
     if(err != QSerialPort::NoError)
     {
         qDebug()<<"Serial port error occured: "<<err;
+        send_timer.stop();
 
         if(err == QSerialPort::ResourceError)
         {

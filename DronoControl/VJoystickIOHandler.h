@@ -64,8 +64,8 @@ public:
     VJoystickIOHandler(void)
     {
         #if defined(DRONOSERIAL)
-//            dbridge = std::dynamic_pointer_cast<DronoDataBridge>(std::make_shared<DronoSerialDataBridge>());
-            dbridge = std::dynamic_pointer_cast<DronoDataBridge>(std::make_shared<DronoRfcommDataBridge>());
+            dbridge = std::dynamic_pointer_cast<DronoDataBridge>(std::make_shared<DronoSerialDataBridge>());
+//            dbridge = std::dynamic_pointer_cast<DronoDataBridge>(std::make_shared<DronoRfcommDataBridge>());
         #else
             dbridge = std::dynamic_pointer_cast<DronoDataBridge>(std::make_shared<DronoHttpDataBridge>());
         #endif
