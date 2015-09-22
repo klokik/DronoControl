@@ -15,7 +15,8 @@ INCLUDEPATH += /usr/include
 SOURCES += main.cpp \
     dronostateinfo.cpp \
     dronodatabridge.cpp \
-    joystickiohandler.cpp
+    joystickiohandler.cpp \
+    sjoystickhandler.cpp
 
 RESOURCES += qml.qrc
 
@@ -29,4 +30,5 @@ HEADERS += \
     VJoystickIOHandler.h \
     dronostateinfo.h \
     dronodatabridge.h \
-    joystickiohandler.h
+    joystickiohandler.h \
+    sjoystickhandler.h

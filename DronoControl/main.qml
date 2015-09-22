@@ -32,10 +32,13 @@ Window {
             rightStick.shift = Qt.vector2d(x,y);
     }
 
-    function qmlExtAuxChanged(id,state)
+    function qmlExtAuxChanged(id,state,is_button)
     {
-        if(state == "low")
+        if(is_button && state == "low")
             eval('aux_'+(id+1)).click();
+
+        if(!is_button)
+            eval('aux_'+(id+1)).state = state;
     }
 
     RowLayout {

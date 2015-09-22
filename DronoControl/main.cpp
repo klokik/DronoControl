@@ -8,6 +8,7 @@
 
 #include "VJoystickIOHandler.h"
 #include "joystickiohandler.h"
+#include "sjoystickhandler.h"
 
 int main(int argc, char *argv[])
 {
@@ -18,6 +19,7 @@ int main(int argc, char *argv[])
 
     VJoystickIOHandler vjoy_handler;
     JoystickIOHandler joystick;
+    SJoystickHandler sjoystick;
 
     QObject *root;
     if((root = engine.rootObjects().first()))
@@ -41,7 +43,10 @@ int main(int argc, char *argv[])
         QObject::connect(&vjoy_handler.update_info_timer,SIGNAL(timeout()),&vjoy_handler,SLOT(fetchInfo()));
 
         QObject::connect(&joystick,SIGNAL(AxisChange(QVariant,QVariant,QVariant)),root,SLOT(qmlExtTriggerChanged(QVariant,QVariant,QVariant)));
-        QObject::connect(&joystick,SIGNAL(ButtonChange(QVariant,QVariant)),root,SLOT(qmlExtAuxChanged(QVariant,QVariant)));
+        QObject::connect(&joystick,SIGNAL(ButtonChange(QVariant,QVariant,QVariant)),root,SLOT(qmlExtAuxChanged(QVariant,QVariant,QVariant)));
+
+        QObject::connect(&sjoystick,SIGNAL(AxisChange(QVariant,QVariant,QVariant)),root,SLOT(qmlExtTriggerChanged(QVariant,QVariant,QVariant)));
+        QObject::connect(&sjoystick,SIGNAL(ButtonChange(QVariant,QVariant,QVariant)),root,SLOT(qmlExtAuxChanged(QVariant,QVariant,QVariant)));
 
         vjoy_handler.update_info_timer.start(1000);
     }

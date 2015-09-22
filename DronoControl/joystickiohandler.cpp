@@ -75,9 +75,9 @@ void JoystickIOHandler::onButtonChange(const SDL_ControllerButtonEvent sdlEvent)
     if((int)sdlEvent.button == 5)
     {
         qDebug()<<"Exit";
-        quick_exit(0);
+        exit(0);
     }
-    emit ButtonChange((int)sdlEvent.button,sdlEvent.state?"high":"low");
+    emit ButtonChange((int)sdlEvent.button,sdlEvent.state?"high":"low",true);
 }
 
 void JoystickIOHandler::run()

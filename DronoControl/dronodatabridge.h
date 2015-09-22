@@ -6,6 +6,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QUrl>
+#include <QUdpSocket>
 #include <QtBluetooth/QBluetoothSocket>
 
 #include <cstdint>
@@ -20,6 +21,8 @@ protected:
 
     std::queue< std::pair<uint8_t,uint8_t> > write_queue;
     std::map<uint8_t,uint8_t> send_timer_queue;
+    std::map<uint8_t,uint8_t> last_val_set;
+    std::vector<uint8_t> auto_update_regs;
 
     QTimer send_timer;
 
@@ -45,13 +48,13 @@ public:
 
     uint16_t getLastPing();
 
-    void enqueueTimerWriteByte(int reg,uint8_t val);
-    void enqueueTimerWriteUint16(int reg,uint16_t val);
+    virtual void enqueueTimerWriteByte(int reg,uint8_t val);
+    virtual void enqueueTimerWriteUint16(int reg,uint16_t val);
 
     DronoDataBridge();
 };
 
-#define DRONOSERIAL
+//#define DRONOSERIAL
 #if defined(DRONOSERIAL)
 
 #include <QtSerialPort/QSerialPort>
@@ -105,6 +108,33 @@ public:
     virtual bool waitReady();
 
     DronoHttpDataBridge();
+};
+
+class DronoUDPDataBridge: public DronoDataBridge
+{
+    Q_OBJECT
+
+protected slots:
+    void ping();
+
+protected:
+    QUdpSocket *usocket;
+
+    QElapsedTimer etimer;
+
+public:
+
+    uint16_t server_port = 8081;
+    QString server_ip = "192.168.1.1";
+    QTimer alive;
+
+    virtual uint8_t readByte(int reg) override;
+
+    virtual void endWrite() override;
+    virtual bool waitReady();
+
+    DronoUDPDataBridge(int port);
+    ~DronoUDPDataBridge();
 };
 
 class DronoRfcommDataBridge: public DronoDataBridge

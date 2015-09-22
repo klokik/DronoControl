@@ -54,6 +54,7 @@ void DronoDataBridge::writeBool(int reg, bool val)
 void DronoDataBridge::writeByte(int reg, uint8_t val)
 {
     write_queue.push(std::pair<uint8_t,uint8_t>(reg,val));
+    last_val_set[reg] = val;
 }
 
 void DronoDataBridge::writeUInt16(int reg, uint16_t val)
@@ -96,6 +97,19 @@ void DronoDataBridge::enqueueTimerWriteByte(int reg, uint8_t val)
 DronoDataBridge::DronoDataBridge()
 {
     connect(&send_timer,SIGNAL(timeout()),this,SLOT(flushTimerQueue()));
+
+    for(int q=0;q<16;q++)
+        auto_update_regs.push_back(REG_RC_VAL0+q);
+
+    //write default values
+    writeUInt16(REG_RC_VAL0   ,500);
+    writeUInt16(REG_RC_VAL0+2 ,500);
+    writeUInt16(REG_RC_VAL0+4 ,500);
+    writeUInt16(REG_RC_VAL0+6 ,0);
+    writeUInt16(REG_RC_VAL0+8 ,0);
+    writeUInt16(REG_RC_VAL0+10,0);
+    writeUInt16(REG_RC_VAL0+12,0);
+    writeUInt16(REG_RC_VAL0+14,0);
 }
 
 #if defined(DRONOSERIAL)
@@ -216,7 +230,7 @@ void DronoSerialDataBridge::serial_error(QSerialPort::SerialPortError err)
             }
 
             qDebug()<<"Start connecting";
-            QTimer::singleShot(1000,this,SLOT(try_connect()));
+            QTimer::singleShot(1000,this,SLOT(tryConnect()));
         }
     }
 }
@@ -480,4 +494,82 @@ DronoRfcommDataBridge::~DronoRfcommDataBridge()
         socket->close();
         delete socket;
     }
+}
+
+
+void DronoUDPDataBridge::ping()
+{
+    auto ver = readByte(REG_VER);
+//    qDebug()<<"#ping "<<ver;
+
+    for(auto item:auto_update_regs)
+        enqueueTimerWriteByte(item,last_val_set.at(item));
+}
+
+uint8_t DronoUDPDataBridge::readByte(int reg)
+{
+    uint8_t buf[] = {0,(uint8_t)reg,0,0};
+    QString hexstr = "";
+    for(uint q=0;q<sizeof(buf);q++)
+        hexstr += QString::number(buf[q],16).rightJustified(2,'0');
+//    hexstr.append('\n');
+    hexstr.append('\r');
+    hexstr = hexstr.toUpper();
+
+    QByteArray ba_str = hexstr.toLocal8Bit();
+
+    usocket->connectToHost(QHostAddress(server_ip),server_port);
+    this->usocket->write(ba_str.constData(),ba_str.length());
+
+//    qDebug()<<this->usocket->readLine();
+    usocket->disconnectFromHost();
+
+    return 0*reg;
+}
+
+void DronoUDPDataBridge::endWrite()
+{
+    QString hexstr = "";
+
+    while(!write_queue.empty())
+    {
+        auto item=write_queue.front();
+        write_queue.pop();
+
+        uint8_t buf[] = {1,(uint8_t)item.first,item.second,0};
+        for(uint q=0;q<sizeof(buf);q++)
+            hexstr += QString::number(buf[q],16).rightJustified(2,'0');
+        hexstr.append('\n');
+        hexstr.append('\r');
+    }
+
+    hexstr = hexstr.toUpper();
+
+    QByteArray ba_str = hexstr.toLocal8Bit();
+
+    usocket->connectToHost(QHostAddress(server_ip),server_port);
+    this->usocket->write(ba_str.constData(),ba_str.length());
+    usocket->disconnectFromHost();
+}
+
+bool DronoUDPDataBridge::waitReady()
+{
+    return true;
+}
+
+DronoUDPDataBridge::DronoUDPDataBridge(int port)
+{
+    server_port=port;
+    usocket=new QUdpSocket(this);
+
+    usocket->bind(QHostAddress::LocalHost,8082);
+
+    QObject::connect(&alive,SIGNAL(timeout()),this,SLOT(ping()));
+    alive.start(250);
+    send_timer.start(50);
+}
+
+DronoUDPDataBridge::~DronoUDPDataBridge()
+{
+    delete this->usocket;
 }

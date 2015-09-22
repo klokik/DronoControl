@@ -25,7 +25,7 @@ protected:
 
 signals:
     void AxisChange(QVariant id,QVariant x,QVariant y);
-    void ButtonChange(QVariant id,QVariant state);
+    void ButtonChange(QVariant id,QVariant state,QVariant is_button);
 
 public:
     JoystickIOHandler();
