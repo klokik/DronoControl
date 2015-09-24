@@ -518,11 +518,8 @@ uint8_t DronoUDPDataBridge::readByte(int reg)
 
     QByteArray ba_str = hexstr.toLocal8Bit();
 
-    usocket->connectToHost(QHostAddress(server_ip),server_port);
-    this->usocket->write(ba_str.constData(),ba_str.length());
-
-//    qDebug()<<this->usocket->readLine();
-    usocket->disconnectFromHost();
+//    usocket->connectToHost(QHostAddress(server_ip),server_port);
+    this->usocket->writeDatagram(ba_str,QHostAddress(server_ip),server_port);
 
     return 0*reg;
 }
@@ -544,12 +541,9 @@ void DronoUDPDataBridge::endWrite()
     }
 
     hexstr = hexstr.toUpper();
-
     QByteArray ba_str = hexstr.toLocal8Bit();
 
-    usocket->connectToHost(QHostAddress(server_ip),server_port);
-    this->usocket->write(ba_str.constData(),ba_str.length());
-    usocket->disconnectFromHost();
+    this->usocket->writeDatagram(ba_str,QHostAddress(server_ip),server_port);
 }
 
 bool DronoUDPDataBridge::waitReady()
