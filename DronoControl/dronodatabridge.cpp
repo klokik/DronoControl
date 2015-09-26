@@ -499,7 +499,7 @@ DronoRfcommDataBridge::~DronoRfcommDataBridge()
 
 void DronoUDPDataBridge::ping()
 {
-    auto ver = readByte(REG_VER);
+//    auto ver = readByte(REG_VER);
 //    qDebug()<<"#ping "<<ver;
 
     for(auto item:auto_update_regs)
@@ -512,13 +512,12 @@ uint8_t DronoUDPDataBridge::readByte(int reg)
     QString hexstr = "";
     for(uint q=0;q<sizeof(buf);q++)
         hexstr += QString::number(buf[q],16).rightJustified(2,'0');
-//    hexstr.append('\n');
+    hexstr.append('\n');
     hexstr.append('\r');
     hexstr = hexstr.toUpper();
 
     QByteArray ba_str = hexstr.toLocal8Bit();
 
-//    usocket->connectToHost(QHostAddress(server_ip),server_port);
     this->usocket->writeDatagram(ba_str,QHostAddress(server_ip),server_port);
 
     return 0*reg;
@@ -543,7 +542,9 @@ void DronoUDPDataBridge::endWrite()
     hexstr = hexstr.toUpper();
     QByteArray ba_str = hexstr.toLocal8Bit();
 
-    this->usocket->writeDatagram(ba_str,QHostAddress(server_ip),server_port);
+    auto sent = this->usocket->writeDatagram(ba_str.data(),ba_str.length(),QHostAddress(server_ip),server_port);
+
+    qDebug() << "end write " << ba_str.length() << ":" << sent;
 }
 
 bool DronoUDPDataBridge::waitReady()
@@ -556,11 +557,11 @@ DronoUDPDataBridge::DronoUDPDataBridge(int port)
     server_port=port;
     usocket=new QUdpSocket(this);
 
-    usocket->bind(QHostAddress::LocalHost,8082);
+//    usocket->bind(QHostAddress::LocalHost,8082);
 
     QObject::connect(&alive,SIGNAL(timeout()),this,SLOT(ping()));
     alive.start(250);
-    send_timer.start(50);
+    send_timer.start(20);
 }
 
 DronoUDPDataBridge::~DronoUDPDataBridge()
