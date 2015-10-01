@@ -54,8 +54,8 @@ public:
     DronoDataBridge();
 };
 
-//#define DRONOSERIAL
-#if defined(DRONOSERIAL)
+
+#if !defined(__ANDROID__)
 
 #include <QtSerialPort/QSerialPort>
 
@@ -80,7 +80,7 @@ public:
     DronoSerialDataBridge();
     ~DronoSerialDataBridge();
 };
-#endif /* DRONOSERIAL */
+#endif /* __ANDROID__ */
 
 class DronoHttpDataBridge: public DronoDataBridge
 {

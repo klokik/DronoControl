@@ -1,6 +1,9 @@
 #include "sjoystickhandler.h"
 
 #include <QStringList>
+
+#if !defined(__ANDROID__)
+
 #include <QtSerialPort/QSerialPortInfo>
 
 
@@ -121,6 +124,7 @@ SJoystickHandler::~SJoystickHandler()
     }
 }
 
+#endif // __ANDROID__
 
 void BTJoystickHandler::run()
 {

@@ -2,13 +2,12 @@ TEMPLATE = app
 
 QT += qml quick bluetooth
 
-#DEFINES += "DRONOSERIAL"
-#QMAKE_CXXFLAGS += -DDRONOSERIAL
-QT += serialport
+linux:!android {
+    QT += serialport
+    LIBS += -lSDL2
+}
 
 CONFIG += c++11
-
-LIBS += -lSDL2
 
 INCLUDEPATH += /usr/include
 

@@ -4,6 +4,7 @@
 
 #include <QtCore>
 
+#if !defined(__ANDROID__)
 
 void JoystickIOHandler::onControllerAdd(const SDL_ControllerDeviceEvent sdlEvent)
 {
@@ -130,3 +131,5 @@ JoystickIOHandler::~JoystickIOHandler()
 
     SDL_Quit();
 }
+
+#endif

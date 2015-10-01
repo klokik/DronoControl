@@ -18,8 +18,10 @@ int main(int argc, char *argv[])
     engine.load(QUrl(QStringLiteral("qrc:///main.qml")));
 
     VJoystickIOHandler vjoy_handler;
+#if !defined(__ANDROID__)
     JoystickIOHandler joystick;
     SJoystickHandler sjoystick;
+#endif
     BTJoystickHandler btjoystick;
 
     QObject *root;

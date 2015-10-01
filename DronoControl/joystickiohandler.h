@@ -1,6 +1,8 @@
 #ifndef JOYSTICKIOHANDLER_H
 #define JOYSTICKIOHANDLER_H
 
+#if !defined(__ANDROID__)
+
 #include <SDL2/SDL.h>
 
 #include <QtCore>
@@ -33,4 +35,5 @@ public:
     ~JoystickIOHandler();
 };
 
+#endif // __ANDROID__
 #endif // JOYSTICKIOHANDLER_H

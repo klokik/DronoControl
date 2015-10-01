@@ -112,9 +112,10 @@ DronoDataBridge::DronoDataBridge()
     writeUInt16(REG_RC_VAL0+14,0);
 }
 
-#if defined(DRONOSERIAL)
+#if !defined(__ANDROID__)
 
 #include <QtSerialPort/QSerialPortInfo>
+
 
 DronoSerialDataBridge::DronoSerialDataBridge()
 {
@@ -243,8 +244,7 @@ DronoSerialDataBridge::~DronoSerialDataBridge()
         qDebug()<<"serial port closed";
     }
 }
-#endif /* DRONOSERIAL */
-
+#endif /* __ANDROID__ */
 
 
 void DronoHttpDataBridge::ping()

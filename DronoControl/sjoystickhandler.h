@@ -1,10 +1,10 @@
 #ifndef SJOYSTICKHANDLER_H
 #define SJOYSTICKHANDLER_H
 
-#define DRONOSERIAL
-#if defined(DRONOSERIAL)
-
 #include <QtCore>
+
+#if !defined(__ANDROID__)
+
 #include <QtSerialPort/QSerialPort>
 
 class SJoystickHandler: public QThread
