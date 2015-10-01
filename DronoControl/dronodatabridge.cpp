@@ -198,7 +198,7 @@ void DronoSerialDataBridge::tryConnect()
         }
     }
 
-    qDebug()<< "No acceptable serial device found";
+//    qDebug()<< "No acceptable serial device found";
     QTimer::singleShot(1000,this,SLOT(tryConnect()));
     //return false;
 }
