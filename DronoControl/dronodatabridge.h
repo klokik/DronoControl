@@ -148,7 +148,7 @@ protected:
 
     bool connected = false;
 
-    QString baddress = "00:11:10:17:05:52";
+    QString baddress = "30:14:07:31:47:82"; // 00:11:10:17:05:52
 
     QElapsedTimer etimer;
 
