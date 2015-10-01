@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
     VJoystickIOHandler vjoy_handler;
     JoystickIOHandler joystick;
     SJoystickHandler sjoystick;
+    BTJoystickHandler btjoystick;
 
     QObject *root;
     if((root = engine.rootObjects().first()))
@@ -47,6 +48,9 @@ int main(int argc, char *argv[])
 
         QObject::connect(&sjoystick,SIGNAL(AxisChange(QVariant,QVariant,QVariant)),root,SLOT(qmlExtTriggerChanged(QVariant,QVariant,QVariant)));
         QObject::connect(&sjoystick,SIGNAL(ButtonChange(QVariant,QVariant,QVariant)),root,SLOT(qmlExtAuxChanged(QVariant,QVariant,QVariant)));
+
+        QObject::connect(&btjoystick,SIGNAL(AxisChange(QVariant,QVariant,QVariant)),root,SLOT(qmlExtTriggerChanged(QVariant,QVariant,QVariant)));
+        QObject::connect(&btjoystick,SIGNAL(ButtonChange(QVariant,QVariant,QVariant)),root,SLOT(qmlExtAuxChanged(QVariant,QVariant,QVariant)));
 
         vjoy_handler.update_info_timer.start(1000);
     }

@@ -544,7 +544,8 @@ void DronoUDPDataBridge::endWrite()
 
     auto sent = this->usocket->writeDatagram(ba_str.data(),ba_str.length(),QHostAddress(server_ip),server_port);
 
-    qDebug() << "end write " << ba_str.length() << ":" << sent;
+    if(ba_str.length() != sent)
+        qDebug() << "end write " << ba_str.length() << ":" << sent;
 }
 
 bool DronoUDPDataBridge::waitReady()
