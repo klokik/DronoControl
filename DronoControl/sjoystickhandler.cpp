@@ -128,45 +128,55 @@ SJoystickHandler::~SJoystickHandler()
 
 void BTJoystickHandler::run()
 {
-    done = false;
+//    done = false;
 
-    float axes[] = {0.f,0.f,0.f,-1.0f};
-    float hmag = 500;
+//    float axes[] = {0.f,0.f,0.f,-1.0f};
+//    float hmag = 500;
 
-    while(!done)
-    {
-        if(socket->isOpen())
-        {
-            if(!socket->canReadLine())
-            {
-                msleep(15);
-                continue;
-            }
+//    while(!done)
+//    {
+//        if(socket->isOpen())
+//        {
+//            qDebug() << "Waiting for RFCOMM message";
+//            if(!socket->waitForReadyRead(1000))
+//            {
+//                qDebug() << "Timeout";
+//                msleep(500);
+//                qDebug() << "BytesAvailable: " << socket->bytesAvailable();
+//                continue;
+//            }
 
-            auto line = QString(socket->readLine(16));
-            auto tokens = line.split(' ');
+//            if(!socket->canReadLine())
+//            {
+//                qDebug() << "Message is not ready!";
+////                msleep(15);
+//                continue;
+//            }
 
-            if(tokens.size() != 2)
-                continue;
+//            auto line = QString(socket->readLine(16));
+//            auto tokens = line.split(' ');
 
-            auto id = tokens.at(0).toInt();
-            auto value = tokens.at(1).toInt();
+//            if(tokens.size() != 2)
+//                continue;
 
-            if(id >= 4)
-                emit ButtonChange(id-4,value>500?"high":"low",false);
-            else
-            {
-                axes[id] = value/hmag - 1.f;
+//            auto id = tokens.at(0).toInt();
+//            auto value = tokens.at(1).toInt();
 
-                if(id < 2)
-                    emit AxisChange(0,axes[0],axes[1]);
-                else
-                    emit AxisChange(1,axes[2],axes[3]);
-            }
-        }
-        else
-            sleep(1);
-    }
+//            if(id >= 4)
+//                emit ButtonChange(id-4,value>500?"high":"low",false);
+//            else
+//            {
+//                axes[id] = value/hmag - 1.f;
+
+//                if(id < 2)
+//                    emit AxisChange(0,axes[0],axes[1]);
+//                else
+//                    emit AxisChange(1,axes[2],axes[3]);
+//            }
+//        }
+//        else
+//            sleep(1);
+//    }
 }
 
 void BTJoystickHandler::tryConnect()
@@ -178,8 +188,11 @@ void BTJoystickHandler::tryConnect()
 
     //! [Connecting the socket]
     // memory leak!?
-    socket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol);
-    socket->connectToService(QBluetoothAddress(baddress),QBluetoothUuid(QBluetoothUuid::SerialPort));
+    QBluetoothUuid uuid = QBluetoothUuid(QString("00001101-0000-1000-8000-00805F9B34FB"));
+    qDebug() << "Used uuid " << QBluetoothUuid(QBluetoothUuid::Rfcomm)
+             << "\nvs " << QBluetoothUuid(QString("00001101-0000-1000-8000-00805F9B34FB"));
+    socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
+    socket->connectToService(QBluetoothAddress(baddress),uuid);
 
     connect(socket, SIGNAL(readyRead()), this, SLOT(readSocket()));
     connect(socket, SIGNAL(connected()), this, SLOT(serverConnected()));
@@ -207,6 +220,17 @@ void BTJoystickHandler::serverConnected()
 
     qDebug()<<"\tdone";
 
+    qDebug() << "Open: " << socket->isOpen();
+    qDebug() << "Readable: " << socket->isReadable();
+    qDebug() << "Writable: " << socket->isWritable();
+    qDebug() << "TextMode: " << socket->isTextModeEnabled();
+    qDebug() << "pName: " << socket->peerName();
+    qDebug() << "pAddress: " << socket->peerAddress();
+    qDebug() << "pPort: " << socket->peerPort();
+    qDebug() << "OpenMode: " << socket->openMode();
+    qDebug() << "BytesAvailable: " << socket->bytesAvailable();
+    socket->dumpObjectInfo();
+
     connected = true;
     connecting.unlock();
 }
@@ -225,18 +249,35 @@ void BTJoystickHandler::socketError(QBluetoothSocket::SocketError error)
 
 void BTJoystickHandler::readSocket()
 {
-    qDebug()<<"data received";
-    return;
-
     if (!socket)
         return;
 
-    QByteArray line;
+    float hmag = 500;
+
     while (socket->canReadLine())
     {
-        line = socket->readLine();
-        qDebug() << "Line: " << QString::fromUtf8(line.constData(), line.length());
+        auto line = QString(socket->readLine(16));
+        auto tokens = line.split(' ');
+
+        if(tokens.size() != 2)
+            continue;
+
+        auto id = tokens.at(0).toInt();
+        auto value = tokens.at(1).toInt();
+
+        if(id >= 4)
+            emit ButtonChange(id-4,value>500?"high":"low",false);
+        else
+        {
+            axes[id] = value/hmag - 1.f;
+
+            if(id < 2)
+                emit AxisChange(0,axes[0],axes[1]);
+            else
+                emit AxisChange(1,axes[2],axes[3]);
+        }
     }
+
 }
 
 BTJoystickHandler::BTJoystickHandler()

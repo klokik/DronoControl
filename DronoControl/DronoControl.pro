@@ -4,12 +4,15 @@ QT += qml quick bluetooth
 
 linux:!android {
     QT += serialport
+    INCLUDEPATH += /usr/include
     LIBS += -lSDL2
 }
 
-CONFIG += c++11
+android {
+    DEFINES += "__ANDROID__"
+}
 
-INCLUDEPATH += /usr/include
+CONFIG += c++11
 
 SOURCES += main.cpp \
     dronostateinfo.cpp \
@@ -31,3 +34,14 @@ HEADERS += \
     dronodatabridge.h \
     joystickiohandler.h \
     sjoystickhandler.h
+
+DISTFILES += \
+    android/AndroidManifest.xml \
+    android/gradle/wrapper/gradle-wrapper.jar \
+    android/gradlew \
+    android/res/values/libs.xml \
+    android/build.gradle \
+    android/gradle/wrapper/gradle-wrapper.properties \
+    android/gradlew.bat
+
+ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android

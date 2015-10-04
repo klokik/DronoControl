@@ -49,6 +49,8 @@ protected:
 
     QString baddress = "30:14:07:31:47:82";
 
+    float axes[4] = {0.f,0.f,0.f,-1.0f};
+
     void run();
 
 protected slots:
